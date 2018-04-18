@@ -20,7 +20,7 @@ void crear_matriz_nomax(int i, int j);
 void seguir_cadena_m2(int i, int j);
 void seguir_cadena_orientacion(int i, int j);
 
-int tam,metodo,mascara;
+int tam, metodo, mascara;
 int u_max, u_min;
 int total_bien = 0;
 int total_mal = 0;
@@ -72,26 +72,26 @@ int main(int argc, char **argv)
 		if (mascara == 1 || mascara == 2 || mascara == 3) break;
 		else printf("Number 1, 2 or 3\n");
 	}
-	while(true){
+	while (true) {
 		cout << "Seleccionar rutina: 1 = vecino más cercano ; 2 = comprobar 8 vecinos:\n";
 		scanf_s("%d", &metodo);
 		if (metodo == 1 || metodo == 2) break;
 		else printf("Number 1 or 2\n");
 	}
-	
+
 	//Medir el tiempo
 	t0 = clock();
 	//Inicialización del programa
 	programa(txt_entrada, txt_salida, metodo);
 
 	printf("Finish successfully\n");
-	
+
 	//Finalización medición del tiempo
 	t1 = clock();
 
 	double time = (double(t1 - t0) / CLOCKS_PER_SEC);
 	cout << "Execution Time: " << time << endl;
-	
+
 }
 
 /*	Programa principal que realiza el procesamiento de la imagen
@@ -128,7 +128,7 @@ void programa(char entrada[], char salida[], int tipo) {
 	matriz_nomax.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_visitados.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol());
 	matriz_umbral.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
-	
+
 
 	//Calcular kernel gaussiano
 	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
@@ -141,7 +141,7 @@ void programa(char entrada[], char salida[], int tipo) {
 			kernel_gauss(i, j) = (1 / (2 * M_PI)) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
 		}
 	}
-	
+
 	kernel_gauss.DivideEscalar(kernel_gauss.Sum());
 
 	//Matriz_J = I * G siendo I la original y G la gaussiana creada anteriormente
@@ -248,7 +248,7 @@ void programa(char entrada[], char salida[], int tipo) {
 
 	///Método1
 	if (metodo == 1) {
-		
+
 		printf("Método 1\n");
 		printf("Estimando orientación de los bordes\n");
 		//Estimar la orientación de la normal de los bordes
@@ -373,7 +373,7 @@ int direccion_cercana(C_Matrix::ElementT f) {
 	if ((angulo > 22.5 && angulo < 67.5) || (angulo < -112.5 && angulo > -157.5)) return 45;
 	if ((angulo > 67.5 && angulo < 112.5) || (angulo < -67.5 && angulo > -112.5)) return 90;
 	if ((angulo > 112.5 && angulo < 157.5) || (angulo < -22.5 && angulo > -67.5)) return 135;
-	
+
 	return -1;	//No llega aquí
 }
 
@@ -382,7 +382,7 @@ int direccion_cercana(C_Matrix::ElementT f) {
 	j : posición j (columnas) de la matriz
 */
 void crear_matriz_nomax(int i, int j) {
-	
+
 	C_Matrix::ElementT v1, v2, v3, v4;
 	C_Matrix::ElementT peso, aux, aux1, aux2;
 
@@ -407,7 +407,7 @@ void crear_matriz_nomax(int i, int j) {
 			v2 = matriz_es(i - 1, j);
 			v4 = matriz_es(i + 1, j);
 
-			if (matriz_Jx(i, j)*matriz_Jy(i, j)>0) {
+			if (matriz_Jx(i, j)*matriz_Jy(i, j) > 0) {
 				v1 = matriz_es(i - 1, j - 1);
 				v3 = matriz_es(i + 1, j + 1);
 			}
@@ -444,7 +444,7 @@ void crear_matriz_nomax(int i, int j) {
 		if (aux >= aux1 && aux >= aux2) {
 			matriz_nomax(i, j) = aux;
 		}
-		else if (aux<aux1 || aux<aux2) {
+		else if (aux < aux1 || aux < aux2) {
 			matriz_nomax(i, j) = 0;
 		}
 	}
@@ -458,7 +458,7 @@ void seguir_cadena_m2(int i, int j) {
 
 	C_Matrix::ElementT valor;
 
-	if(matriz_visitados(i, j) == 0)matriz_visitados(i, j) = 1;
+	if (matriz_visitados(i, j) == 0)matriz_visitados(i, j) = 1;
 	else return;
 
 	matriz_umbral(i, j) = 255;
