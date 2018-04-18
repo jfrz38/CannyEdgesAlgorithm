@@ -246,7 +246,7 @@ void programa(char entrada[], char salida[], int tipo) {
 		}
 	}
 
-	///A partir de aquí solo para el método 1
+	///Método1
 	if (metodo == 1) {
 		
 		printf("Método 1\n");
@@ -292,6 +292,7 @@ void programa(char entrada[], char salida[], int tipo) {
 			}
 		}
 	}
+	///Método2
 	else if (metodo == 2) {
 
 		//Comprobar el peso con los vecino en la dirección correcta
@@ -321,6 +322,7 @@ void programa(char entrada[], char salida[], int tipo) {
 			}
 		}
 	}
+	///Error
 	else {
 		printf("Error\n");
 	}
@@ -379,8 +381,6 @@ int direccion_cercana(C_Matrix::ElementT f) {
 	i : posición i (filas) de la matriz
 	j : posición j (columnas) de la matriz
 */
-
-/*
 void crear_matriz_nomax(int i, int j) {
 	
 	C_Matrix::ElementT v1, v2, v3, v4;
@@ -449,8 +449,6 @@ void crear_matriz_nomax(int i, int j) {
 		}
 	}
 }
-
-*/
 
 /*	Método para crear la imágen según el umbral de mínimos de forma recursiva siguiendo los 8 vecinos
 	i : posición fila de la matriz
@@ -570,90 +568,4 @@ void seguir_cadena_orientacion(int i, int j) {
 	//Seguir cadena por los puntos donde el valor sea mayor al umbral mínimo
 	if (matriz_nomax(i + aux_x1, j + aux_y1) >= u_min) seguir_cadena_orientacion(i + aux_x1, j + aux_y1);
 	if (matriz_nomax(i + aux_x2, j + aux_y2) >= u_min) seguir_cadena_orientacion(i + aux_x2, j + aux_y2);
-}
-
-
-
-
-
-
-
-
-
-
-
-//PRUEBA
-/*	Método para suprimir máximos sin necesidad de mirar el vecino cercano.
-i : posición i (filas) de la matriz
-j : posición j (columnas) de la matriz
-*/
-void crear_matriz_nomax(int i, int j) {
-
-	C_Matrix::ElementT v1, v2, v3, v4;
-	C_Matrix::ElementT peso, aux, aux1, aux2;
-
-	//Evitar index out of bounds
-	if (i == matriz_es.FirstRow() || i == matriz_es.LastRow() || j == matriz_es.FirstCol() || j == matriz_es.LastCol()) {
-		matriz_nomax(i, j) = 0;
-		return;
-	}
-
-	//Si el gradiente vale 0, el valor de borde es 0, por lo que se pone 0 en la matriz de no máximos (negro)
-	if (matriz_es(i, j) == 0) matriz_nomax(i, j) = 0;
-	else {
-		aux = matriz_es(i, j);
-
-		//Si Jy > Jx es que tiende hacia el gradiente y
-		if (abs(matriz_Jy(i, j)) > abs(matriz_Jx(i, j))) {
-			if (matriz_Jy(i, j) == 0) {
-				peso = 1;
-			}
-			else {
-				peso = fabs((matriz_Jx(i, j) / matriz_Jy(i, j)));
-			}
-			//Variables de arriba y abajo
-			v2 = matriz_es(i - 1, j);
-			v4 = matriz_es(i + 1, j);
-
-			if (matriz_Jx(i, j)*matriz_Jy(i, j)>0) {
-				v1 = matriz_es(i - 1, j - 1);
-				v3 = matriz_es(i + 1, j + 1);
-			}
-			else {
-				v1 = matriz_es(i - 1, j + 1);
-				v3 = matriz_es(i + 1, j - 1);
-			}
-		}
-		else {	//Tiende hacia X
-			if (matriz_Jx(i, j) == 0) {
-				peso = 1;
-			}
-			else {
-				peso = fabs((matriz_Jy(i, j) / matriz_Jx(i, j)));
-			}
-			v2 = matriz_es(i, j + 1);
-			v4 = matriz_es(i, j - 1);
-
-			if (matriz_Jx(i, j)*matriz_Jy(i, j) > 0) {
-				v1 = matriz_es(i + 1, j + 1);
-				v3 = matriz_es(i - 1, j - 1);
-			}
-			else {
-				v1 = matriz_es(i - 1, j + 1);
-				v3 = matriz_es(i + 1, j - 1);
-			}
-		}
-		//Calculamos la interpolacion de los gradientes
-		aux1 = peso*v1 + (1 - peso)*v2;
-		aux2 = peso*v3 + (1 - peso)*v4;
-
-		//Suponemos el pixel actual temp como el maximo local
-		//y comprobamos si puede pertenecer al borde
-		if (aux >= aux1 && aux >= aux2) {
-			matriz_nomax(i, j) = aux;
-		}
-		else {
-			matriz_nomax(i, j) = 0;
-		}
-	}
 }
