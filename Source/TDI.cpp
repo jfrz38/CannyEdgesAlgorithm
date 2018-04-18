@@ -657,5 +657,3 @@ void crear_matriz_nomax(int i, int j) {
 		}
 	}
 }
-//
-//
