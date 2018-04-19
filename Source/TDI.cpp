@@ -151,6 +151,7 @@ void programa(char entrada[], char salida[], int tipo) {
 	matriz_J = convolucion(imagen, kernel_gauss);
 
 	//Gradiente Jx y Jy
+	//Gradiente x e y de la imagen suavizada con el kernel gaussiano.
 
 	/*
 	Máscara 1 = Sobel
@@ -158,6 +159,8 @@ void programa(char entrada[], char salida[], int tipo) {
 	Máscara 3 = Roberts
 	Default = Sobel
 	*/
+
+	//TODO : Máscara de Roberts no funciona
 	if (mascara == 1) {
 		//Máscara de Sobel
 		//Gradiente X
