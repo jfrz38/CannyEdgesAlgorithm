@@ -137,7 +137,6 @@ void programa(char entrada[], char salida[], int tipo) {
 	matriz_visitados.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol());
 	matriz_umbral.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 
-
 	//Calcular kernel gaussiano
 	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
 	//La fórmula será: G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
