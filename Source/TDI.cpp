@@ -51,26 +51,34 @@ int main(int argc, char **argv)
 	printf("Inicio del programa\n");
 	char txt_entrada[100];
 	char txt_salida[100];
-	cout << "Enter image input name:\n";
+	//cout << "Enter image input name:\n";
+	cout << "Nombre de la imagen de entrada:\n";
 	cin.getline(txt_entrada, 100);
-	cout << "Enter image output name:\n";
+	//cout << "Enter image output name:\n";
+	cout << "Nombre de la imagen de salida:\n";
 	cin.getline(txt_salida, 100);
 	if (strcmp(txt_entrada, txt_salida) == 0)printf("Image will be overwrite\n");
-	printf("Convolution kernel size (odd value and smaller than image): ");
+	//printf("Convolution kernel size (odd value and smaller than image): ");
+	printf("Tamaño kernel convolución (valor impar menor que la imagen): ");
 	scanf_s("%d", &tam);
 	while (true) {
-		printf("Threshold max value: ");
+		//printf("Threshold max value: ");
+		printf("Valor de umbral máximo: ");
 		scanf_s("%d", &u_max);
-		printf("Threshold min value: ");
+		//printf("Threshold min value: ");
+		printf("Valor de umbral mínimo: ");
 		scanf_s("%d", &u_min);
 		if (u_max > u_min) break;
 		else printf("max value must be higher\n");
 	}
 	while (true) {
-		cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt ; 3 = Roberts \n";
+		//cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt ; 3 = Roberts \n";
+		cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt \n";
 		scanf_s("%d", &mascara);
-		if (mascara == 1 || mascara == 2 || mascara == 3) break;
-		else printf("Number 1, 2 or 3\n");
+		//if (mascara == 1 || mascara == 2 || mascara == 3) break;
+		//else printf("Number 1, 2 or 3\n");
+		if (mascara == 1 || mascara == 2) break;
+		else printf("Número 1 or 2\n");
 	}
 	while (true) {
 		cout << "Seleccionar rutina: 1 = vecino más cercano ; 2 = comprobar 8 vecinos:\n";
@@ -132,7 +140,6 @@ void programa(char entrada[], char salida[], int tipo) {
 
 	//Calcular kernel gaussiano
 	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
-	//El kernel tendrá un tamaño de 5x5
 	//La fórmula será: G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
 	//x = fila ; y = columna ; sigma = desviación estándar
 	double sigma = 1.5;
@@ -160,6 +167,23 @@ void programa(char entrada[], char salida[], int tipo) {
 	Default = Sobel
 	*/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/************************************************************************************************/
 	//TODO : Máscara de Roberts no funciona
 	if (mascara == 1) {
 		//Máscara de Sobel
@@ -229,6 +253,90 @@ void programa(char entrada[], char salida[], int tipo) {
 		mascara_filtro_y = gradiente_sobel_Jy;
 
 	}
+	/**************************************************************************************************************/
+
+
+
+
+
+
+	///TODO : Mejorar máscaras
+/*
+
+
+	if (mascara == 1) {
+		//Máscara de Sobel
+		//Gradiente X
+		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
+		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
+		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
+
+
+		//Gradiente Y
+		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
+		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
+		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
+
+		mascara_filtro_x = gradiente_sobel_Jx;
+		mascara_filtro_y = gradiente_sobel_Jy;
+		mascara_filtro_x.DivideEscalar(1 / 4);
+		mascara_filtro_y.DivideEscalar(1 / 4);
+
+	}
+	else if (mascara == 2) {
+		//Máscara de Prewitt
+		//Gradiente X
+		gradiente_prewitt_Jx(0, 0) = -1;		gradiente_prewitt_Jx(0, 1) = 0;		gradiente_prewitt_Jx(0, 2) = 1;
+		gradiente_prewitt_Jx(1, 0) = -1;		gradiente_prewitt_Jx(1, 1) = 0;		gradiente_prewitt_Jx(1, 2) = 1;
+		gradiente_prewitt_Jx(2, 0) = -1;		gradiente_prewitt_Jx(2, 1) = 0;		gradiente_prewitt_Jx(2, 2) = 1;
+
+
+		//Gradiente Y
+		gradiente_prewitt_Jy(0, 0) = 1;			gradiente_prewitt_Jy(0, 1) = 1;		gradiente_prewitt_Jy(0, 2) = 1;
+		gradiente_prewitt_Jy(1, 0) = 0;			gradiente_prewitt_Jy(1, 1) = 0;		gradiente_prewitt_Jy(1, 2) = 0;
+		gradiente_prewitt_Jy(2, 0) = -1;		gradiente_prewitt_Jy(2, 1) = -1;	gradiente_prewitt_Jy(2, 2) = -1;
+
+		mascara_filtro_x = gradiente_prewitt_Jx;
+		mascara_filtro_y = gradiente_prewitt_Jy;
+	}
+	else if (mascara == 3) {
+		//Máscara de Roberts
+		//Gradiente X
+		gradiente_roberts_Jx(0, 0) = -1;	gradiente_roberts_Jx(0, 1) = 0;		gradiente_roberts_Jx(0, 2) = 0;
+		gradiente_roberts_Jx(1, 0) = 0;		gradiente_roberts_Jx(1, 1) = 1;		gradiente_roberts_Jx(1, 2) = 0;
+		gradiente_roberts_Jx(2, 0) = 0;		gradiente_roberts_Jx(2, 1) = 0;		gradiente_roberts_Jx(2, 2) = 0;
+
+
+		//Gradiente Y
+		gradiente_roberts_Jy(0, 0) = 0;		gradiente_roberts_Jy(0, 1) = 0;		gradiente_roberts_Jy(0, 2) = -1;
+		gradiente_roberts_Jy(1, 0) = 0;		gradiente_roberts_Jy(1, 1) = 1;		gradiente_roberts_Jy(1, 2) = 0;
+		gradiente_roberts_Jy(2, 0) = 0;		gradiente_roberts_Jy(2, 1) = 0;		gradiente_roberts_Jy(2, 2) = 0;
+
+		mascara_filtro_x = gradiente_roberts_Jx;
+		mascara_filtro_y = gradiente_roberts_Jy;
+	}
+	else {
+		//No debería entrar aquí
+		//Se aplica Sobel por defecto
+		//Máscara de Sobel
+		//Gradiente X
+		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
+		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
+		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
+
+
+		//Gradiente Y
+		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
+		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
+		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
+
+		mascara_filtro_x = gradiente_sobel_Jx;
+		mascara_filtro_y = gradiente_sobel_Jy;
+
+	}
+
+
+	*/
 
 	//Convolución Jx
 	//Hacer convolución de J usando la máscara según el filtro elegido y guardarlo en matriz_Jx
