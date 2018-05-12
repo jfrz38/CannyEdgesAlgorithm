@@ -127,8 +127,6 @@ void programa(char entrada[], char salida[]) {
 	matriz_J.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_es.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_eo.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
-	//mascara_filtro_x.Resize(0, 2, 0, 2);
-	//mascara_filtro_y.Resize(0, 2, 0, 2);
 	mascara_filtro_x.Resize(1, 3, 1, 3);
 	mascara_filtro_y.Resize(1, 3, 1, 3);
 	matriz_Jx.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
@@ -142,7 +140,6 @@ void programa(char entrada[], char salida[]) {
 	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
 	//La fórmula será: G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
 	//x = fila ; y = columna ; sigma = desviación estándar
-	//double sigma = 1.5;
 	for (int i = kernel_gauss.FirstRow(); i <= kernel_gauss.LastRow(); i++) {
 		for (int j = kernel_gauss.FirstCol(); j <= kernel_gauss.LastCol(); j++) {
 			kernel_gauss(i, j) = (1 / (2 * M_PI)) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
@@ -178,60 +175,11 @@ void programa(char entrada[], char salida[]) {
 	mascara_filtro_y(2, 1) = 0;			mascara_filtro_y(2, 2) = 0;		mascara_filtro_y(2, 3) = 0;
 	mascara_filtro_y(3, 1) = 1;			mascara_filtro_y(3, 2) = k;		mascara_filtro_y(3, 3) = 1;
 
-
-
-	
-	/*
-	printf("Prueba: \n");
-	C_Matrix matriz_prueba(1, 5, 1, 5, 255);
-	C_Matrix mascara_prueba(1, 3, 1, 3);
-	C_Matrix resultado_prueba(1, 5, 1, 5);
-
-	printf("aa\n");
-	matriz_prueba(1, 1) = 35; matriz_prueba(1, 2) = 40; matriz_prueba(1, 3) = 41; matriz_prueba(1, 4) = 45; matriz_prueba(1, 5) = 50;
-	matriz_prueba(2, 1) = 40; matriz_prueba(2, 2) = 40; matriz_prueba(2, 3) = 42; matriz_prueba(2, 4) = 46; matriz_prueba(2, 5) = 52;
-	matriz_prueba(3, 1) = 42; matriz_prueba(3, 2) = 46; matriz_prueba(3, 3) = 50; matriz_prueba(3, 4) = 55; matriz_prueba(3, 5) = 55;
-	matriz_prueba(4, 1) = 48; matriz_prueba(4, 2) = 52; matriz_prueba(4, 3) = 56; matriz_prueba(4, 4) = 58; matriz_prueba(4, 5) = 60;
-	matriz_prueba(5, 1) = 56; matriz_prueba(5, 2) = 60; matriz_prueba(5, 3) = 65; matriz_prueba(5, 4) = 70; matriz_prueba(5, 5) = 75;
-	
-	printf("bb\n");
-	mascara_prueba(1, 1) = -2; mascara_prueba(1, 2) = -1; mascara_prueba(1, 3) = 0;
-	mascara_prueba(2, 1) = -1; mascara_prueba(2, 2) = 1;  mascara_prueba(2, 3) = 1;
-	mascara_prueba(3, 1) = 0; mascara_prueba(3, 2) = 1;  mascara_prueba(3, 3) = 2;
-
-	printf("cc\n");
-	resultado_prueba = convolucion(matriz_prueba,mascara_prueba);
-
-	for (int i = resultado_prueba.FirstRow(); i <= resultado_prueba.LastRow(); i++) {
-		for (int j = resultado_prueba.FirstCol(); j <= resultado_prueba.LastCol(); j++) {
-			printf("%lf, ",resultado_prueba(i,j));
-		}
-		printf("\n");
-	}
-
-	printf("\nFin resultado prueba\n");
-	*/
-
 	//Convolución Jx
 	//Hacer convolución de J usando la máscara según el filtro elegido y guardarlo en matriz_Jx
 
 	printf("Convoluci\242n con el gradiente X\n");
 	matriz_Jx = convolucion(matriz_J, mascara_filtro_x);
-
-
-	/*printf("matriz_Jx\n");
-
-	for (int i = matriz_Jx.FirstRow(); i <= matriz_Jx.LastRow(); i++) {
-		for (int j = matriz_Jx.FirstCol(); j <= matriz_Jx.LastCol(); j++) {
-			printf("%lf, ", matriz_Jx(i, j));
-		}
-		printf("\n");
-	}
-
-	printf("\nFin matriz_Jx\n");*/
-
-
-
 
 	//Convolución Jy
 	//Hacer convolución de J usando la máscara según el filtro elegido y guardarlo en matriz_Jy
@@ -342,7 +290,6 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 
 	int center = m2.RowN() / 2;
 	C_Matrix aux(m1.FirstRow(), m1.LastRow(), m1.FirstCol(), m1.LastCol(), 255);
-	//int contador = 0;
 	C_Matrix::ElementT sumatoria_convolucion;
 
 	for (int i = m1.FirstRow(); i <= m1.LastRow(); i++) {
@@ -363,24 +310,6 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 			aux(i, j) = sumatoria_convolucion;
 		}
 	}
-	
-	
-	
-	
-	
-	/*for (int i = m1.FirstRow() + center; i < m1.LastRow() - center; i++) {
-		for (int j = m1.FirstCol() + center; j < m1.LastCol() - center; j++) {
-			sumatoria_convolucion = 0;
-			for (int k = m2.FirstRow(); k <= m2.LastRow(); k++) {
-				for (int l = m2.FirstCol(); l <= m2.LastCol(); l++) {
-					//Se resta center por el tamaño del kernel
-					sumatoria_convolucion += m1(i + k - center, j + l - center)*m2(k, l);
-				}
-			}
-			aux(i, j) = sumatoria_convolucion;
-		}
-	}
-	*/
 
 	return aux;
 }
@@ -564,7 +493,8 @@ void seguir_cadena_orientacion(int i, int j) {
 	matriz_visitados(i, j) == 1;	//Visitado
 	matriz_umbral(i, j) = 255;		//Marcado como borde
 
-	//A partir de aquí recorrer píxeles conectados en ambas direcciones perpendiculares a la normal del borde mientras sea > u_min
+	//A partir de aquí recorrer píxeles conectados en ambas direcciones perpendiculares
+	//a la normal del borde mientras sea > u_min
 
 	//Valores de los dos vecinos
 	int aux_x1, aux_y1, aux_x2, aux_y2;
