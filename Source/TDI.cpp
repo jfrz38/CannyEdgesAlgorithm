@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 		else printf("N\243mero 1 or 2\n");
 	}
 	while (true) {
-		cout << "Seleccionar rutina: 1 = vecino m\240s cercano ; 2 = comprobar 8 vecinos:\n";
+		cout << "Seleccionar rutina: 1 = Orientaci\242n ; 2 = comprobar 8 vecinos:\n";
 		scanf_s("%d", &metodo);
 		if (metodo == 1 || metodo == 2) break;
 		else printf("N\243mero 1 or 2\n");
@@ -137,22 +137,21 @@ void programa(char entrada[], char salida[]) {
 	matriz_umbral.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 
 	//Calcular kernel gaussiano
-	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
-	//La fórmula será: G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
-	//x = fila ; y = columna ; sigma = desviación estándar
+	//G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
+	//sigma = desviación estándar
+
 	for (int i = kernel_gauss.FirstRow(); i <= kernel_gauss.LastRow(); i++) {
 		for (int j = kernel_gauss.FirstCol(); j <= kernel_gauss.LastCol(); j++) {
 			kernel_gauss(i, j) = (1 / (2 * M_PI)) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
 		}
 	}
 
-	
 	kernel_gauss.DivideEscalar(kernel_gauss.Sum());
 
 	//Matriz_J = I * G siendo I la original y G la gaussiana creada anteriormente
 	//Hacer convolución de I usando la máscara G y guardarlo en J
 	matriz_J = convolucion(imagen, kernel_gauss);
-	
+
 	//Gradiente Jx y Jy
 	//Gradiente x e y de la imagen suavizada con el kernel gaussiano.
 
@@ -281,6 +280,7 @@ void programa(char entrada[], char salida[]) {
 	imagen_final.WriteBMP(salida);
 
 }
+
 /*	Método para realizar convolución sobre una matriz
 	m1 : matriz sobre la que se realiza la convolución
 	m2 : máscara kernel
@@ -306,7 +306,7 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 					}
 				}
 			}
-			
+
 			aux(i, j) = sumatoria_convolucion;
 		}
 	}
