@@ -11,8 +11,7 @@
 #include <C_Matrix.hpp>
 #include <C_Image.hpp>
 
-//void programa(string entrada, string salida);
-void programa(char entrada[], char salida[], int tipo);
+void programa(char entrada[], char salida[]);
 C_Matrix convolucion(C_Matrix m1, C_Matrix m2);
 int direccion_cercana(C_Matrix::ElementT f);
 void crear_matriz_nomax_orientacion(int i, int j);
@@ -20,7 +19,8 @@ void crear_matriz_nomax(int i, int j);
 void seguir_cadena_m2(int i, int j);
 void seguir_cadena_orientacion(int i, int j);
 
-int tam, metodo, mascara;
+int tam, metodo, mascara, k;
+double sigma;
 int u_max, u_min;
 int total_bien = 0;
 int total_mal = 0;
@@ -57,48 +57,51 @@ int main(int argc, char **argv)
 	//cout << "Enter image output name:\n";
 	cout << "Nombre de la imagen de salida:\n";
 	cin.getline(txt_salida, 100);
-	if (strcmp(txt_entrada, txt_salida) == 0)printf("Image will be overwrite\n");
+	if (strcmp(txt_entrada, txt_salida) == 0)printf("La imagen ser\240 sobrescrita\n");
 	//printf("Convolution kernel size (odd value and smaller than image): ");
-	printf("Tamaño kernel convolución (valor impar menor que la imagen): ");
+	printf("Valor de sigma: ");
+	scanf_s("%lf", &sigma);
+	printf("Tama\244o kernel convoluci\242n (valor impar menor que la imagen): ");
 	scanf_s("%d", &tam);
 	while (true) {
 		//printf("Threshold max value: ");
-		printf("Valor de umbral máximo: ");
+		printf("Valor de umbral m\240ximo: ");
 		scanf_s("%d", &u_max);
 		//printf("Threshold min value: ");
-		printf("Valor de umbral mínimo: ");
+		printf("Valor de umbral m\241nimo: ");
 		scanf_s("%d", &u_min);
 		if (u_max > u_min) break;
-		else printf("max value must be higher\n");
+		else printf("El valor m\240ximo debe ser mayor\n");
 	}
+
 	while (true) {
 		//cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt ; 3 = Roberts \n";
-		cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt \n";
+		cout << "Seleccionar m\240scara: 1 = Prewitt ; 2 = Sobel \n";
 		scanf_s("%d", &mascara);
 		//if (mascara == 1 || mascara == 2 || mascara == 3) break;
 		//else printf("Number 1, 2 or 3\n");
 		if (mascara == 1 || mascara == 2) break;
-		else printf("Número 1 or 2\n");
+		else printf("N\243mero 1 or 2\n");
 	}
 	while (true) {
-		cout << "Seleccionar rutina: 1 = vecino más cercano ; 2 = comprobar 8 vecinos:\n";
+		cout << "Seleccionar rutina: 1 = vecino m\240s cercano ; 2 = comprobar 8 vecinos:\n";
 		scanf_s("%d", &metodo);
 		if (metodo == 1 || metodo == 2) break;
-		else printf("Number 1 or 2\n");
+		else printf("N\243mero 1 or 2\n");
 	}
 
 	//Medir el tiempo
 	t0 = clock();
 	//Inicialización del programa
-	programa(txt_entrada, txt_salida, metodo);
+	programa(txt_entrada, txt_salida);
 
-	printf("Finish successfully\n");
+	printf("Finalizado con \202xito\n");
 
 	//Finalización medición del tiempo
 	t1 = clock();
 
 	double time = (double(t1 - t0) / CLOCKS_PER_SEC);
-	cout << "Execution Time: " << time << endl;
+	cout << "Tiempo de ejecuci\242n: " << time << endl;
 
 }
 
@@ -106,14 +109,14 @@ int main(int argc, char **argv)
 	entrada[] : nombre de la imagen a procesar
 	salida[] : nombre de la imagen creada
 */
-void programa(char entrada[], char salida[], int tipo) {
+void programa(char entrada[], char salida[]) {
 
 	//Leer imagen de entrada
 	printf("Leyendo imagen\n");
 
 	imagen.ReadBMP(entrada);
 	if (imagen.Fail()) {
-		cout << "Image doesn't exist.\n";
+		cout << "La imagen no existe.\n";
 		cin.getline(entrada, 100);
 		system("pause");
 		exit(-1);
@@ -124,12 +127,10 @@ void programa(char entrada[], char salida[], int tipo) {
 	matriz_J.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_es.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_eo.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
-	gradiente_sobel_Jx.Resize(0, 2, 0, 2);
-	gradiente_sobel_Jy.Resize(0, 2, 0, 2);
-	gradiente_prewitt_Jx.Resize(0, 2, 0, 2);
-	gradiente_prewitt_Jy.Resize(0, 2, 0, 2);
-	gradiente_roberts_Jx.Resize(0, 2, 0, 2);
-	gradiente_roberts_Jy.Resize(0, 2, 0, 2);
+	//mascara_filtro_x.Resize(0, 2, 0, 2);
+	//mascara_filtro_y.Resize(0, 2, 0, 2);
+	mascara_filtro_x.Resize(1, 3, 1, 3);
+	mascara_filtro_y.Resize(1, 3, 1, 3);
 	matriz_Jx.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_Jy.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol(), 255);
 	matriz_direccion.Resize(imagen.FirstRow(), imagen.LastRow(), imagen.FirstCol(), imagen.LastCol());
@@ -141,211 +142,100 @@ void programa(char entrada[], char salida[], int tipo) {
 	//Para ello debemos crear una matriz kernel según una variable de desviación por definir.
 	//La fórmula será: G(x,y) = (1/(2*PI*(sigma^2)))*e^-((x^2+y^2)/2+sigma^2)
 	//x = fila ; y = columna ; sigma = desviación estándar
-	double sigma = 1.5;
+	//double sigma = 1.5;
 	for (int i = kernel_gauss.FirstRow(); i <= kernel_gauss.LastRow(); i++) {
 		for (int j = kernel_gauss.FirstCol(); j <= kernel_gauss.LastCol(); j++) {
 			kernel_gauss(i, j) = (1 / (2 * M_PI)) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
 		}
 	}
 
+	
 	kernel_gauss.DivideEscalar(kernel_gauss.Sum());
 
 	//Matriz_J = I * G siendo I la original y G la gaussiana creada anteriormente
 	//Hacer convolución de I usando la máscara G y guardarlo en J
-
-	printf("Convolución sobre la imagen con una máscara Gaussiana\n");
 	matriz_J = convolucion(imagen, kernel_gauss);
-
+	
 	//Gradiente Jx y Jy
 	//Gradiente x e y de la imagen suavizada con el kernel gaussiano.
 
 	/*
-	Máscara 1 = Sobel
-	Máscara 2 = Prewitt
-	Máscara 3 = Roberts
+	Máscara 1 = Prewitt
+	Máscara 2 = Sobel
 	Default = Sobel
 	*/
 
+	k = mascara;
+	if (k != 1 || k != 2) k = 2;
+
+	//GradienteX
+	mascara_filtro_x(1, 1) = -1;		mascara_filtro_x(1, 2) = 0;		mascara_filtro_x(1, 3) = 1;
+	mascara_filtro_x(2, 1) = -k;		mascara_filtro_x(2, 2) = 0;		mascara_filtro_x(2, 3) = k;
+	mascara_filtro_x(3, 1) = -1;		mascara_filtro_x(3, 2) = 0;		mascara_filtro_x(3, 3) = 1;
+
+	//GradienteY
+	mascara_filtro_y(1, 1) = -1;		mascara_filtro_y(1, 2) = -k;	mascara_filtro_y(1, 3) = -1;
+	mascara_filtro_y(2, 1) = 0;			mascara_filtro_y(2, 2) = 0;		mascara_filtro_y(2, 3) = 0;
+	mascara_filtro_y(3, 1) = 1;			mascara_filtro_y(3, 2) = k;		mascara_filtro_y(3, 3) = 1;
 
 
 
+	
+	/*
+	printf("Prueba: \n");
+	C_Matrix matriz_prueba(1, 5, 1, 5, 255);
+	C_Matrix mascara_prueba(1, 3, 1, 3);
+	C_Matrix resultado_prueba(1, 5, 1, 5);
 
+	printf("aa\n");
+	matriz_prueba(1, 1) = 35; matriz_prueba(1, 2) = 40; matriz_prueba(1, 3) = 41; matriz_prueba(1, 4) = 45; matriz_prueba(1, 5) = 50;
+	matriz_prueba(2, 1) = 40; matriz_prueba(2, 2) = 40; matriz_prueba(2, 3) = 42; matriz_prueba(2, 4) = 46; matriz_prueba(2, 5) = 52;
+	matriz_prueba(3, 1) = 42; matriz_prueba(3, 2) = 46; matriz_prueba(3, 3) = 50; matriz_prueba(3, 4) = 55; matriz_prueba(3, 5) = 55;
+	matriz_prueba(4, 1) = 48; matriz_prueba(4, 2) = 52; matriz_prueba(4, 3) = 56; matriz_prueba(4, 4) = 58; matriz_prueba(4, 5) = 60;
+	matriz_prueba(5, 1) = 56; matriz_prueba(5, 2) = 60; matriz_prueba(5, 3) = 65; matriz_prueba(5, 4) = 70; matriz_prueba(5, 5) = 75;
+	
+	printf("bb\n");
+	mascara_prueba(1, 1) = -2; mascara_prueba(1, 2) = -1; mascara_prueba(1, 3) = 0;
+	mascara_prueba(2, 1) = -1; mascara_prueba(2, 2) = 1;  mascara_prueba(2, 3) = 1;
+	mascara_prueba(3, 1) = 0; mascara_prueba(3, 2) = 1;  mascara_prueba(3, 3) = 2;
 
+	printf("cc\n");
+	resultado_prueba = convolucion(matriz_prueba,mascara_prueba);
 
-
-
-
-
-
-
-
-
-
-
-	/************************************************************************************************/
-	//TODO : Máscara de Roberts no funciona
-	if (mascara == 1) {
-		//Máscara de Sobel
-		//Gradiente X
-		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
-		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
-		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
-		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
-		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
-
-		mascara_filtro_x = gradiente_sobel_Jx;
-		mascara_filtro_y = gradiente_sobel_Jy;
-
-	}
-	else if (mascara == 2) {
-		//Máscara de Prewitt
-		//Gradiente X
-		gradiente_prewitt_Jx(0, 0) = -1;		gradiente_prewitt_Jx(0, 1) = 0;		gradiente_prewitt_Jx(0, 2) = 1;
-		gradiente_prewitt_Jx(1, 0) = -1;		gradiente_prewitt_Jx(1, 1) = 0;		gradiente_prewitt_Jx(1, 2) = 1;
-		gradiente_prewitt_Jx(2, 0) = -1;		gradiente_prewitt_Jx(2, 1) = 0;		gradiente_prewitt_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_prewitt_Jy(0, 0) = 1;			gradiente_prewitt_Jy(0, 1) = 1;		gradiente_prewitt_Jy(0, 2) = 1;
-		gradiente_prewitt_Jy(1, 0) = 0;			gradiente_prewitt_Jy(1, 1) = 0;		gradiente_prewitt_Jy(1, 2) = 0;
-		gradiente_prewitt_Jy(2, 0) = -1;		gradiente_prewitt_Jy(2, 1) = -1;	gradiente_prewitt_Jy(2, 2) = -1;
-
-		mascara_filtro_x = gradiente_prewitt_Jx;
-		mascara_filtro_y = gradiente_prewitt_Jy;
-	}
-	else if (mascara == 3) {
-		//Máscara de Roberts
-		//Gradiente X
-		gradiente_roberts_Jx(0, 0) = -1;	gradiente_roberts_Jx(0, 1) = 0;		gradiente_roberts_Jx(0, 2) = 0;
-		gradiente_roberts_Jx(1, 0) = 0;		gradiente_roberts_Jx(1, 1) = 1;		gradiente_roberts_Jx(1, 2) = 0;
-		gradiente_roberts_Jx(2, 0) = 0;		gradiente_roberts_Jx(2, 1) = 0;		gradiente_roberts_Jx(2, 2) = 0;
-
-
-		//Gradiente Y
-		gradiente_roberts_Jy(0, 0) = 0;		gradiente_roberts_Jy(0, 1) = 0;		gradiente_roberts_Jy(0, 2) = -1;
-		gradiente_roberts_Jy(1, 0) = 0;		gradiente_roberts_Jy(1, 1) = 1;		gradiente_roberts_Jy(1, 2) = 0;
-		gradiente_roberts_Jy(2, 0) = 0;		gradiente_roberts_Jy(2, 1) = 0;		gradiente_roberts_Jy(2, 2) = 0;
-
-		mascara_filtro_x = gradiente_roberts_Jx;
-		mascara_filtro_y = gradiente_roberts_Jy;
-	}
-	else {
-		//No debería entrar aquí
-		//Se aplica Sobel por defecto
-		//Máscara de Sobel
-		//Gradiente X
-		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
-		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
-		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
-		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
-		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
-
-		mascara_filtro_x = gradiente_sobel_Jx;
-		mascara_filtro_y = gradiente_sobel_Jy;
-
-	}
-	/**************************************************************************************************************/
-
-
-
-
-
-
-	///TODO : Mejorar máscaras
-/*
-
-
-	if (mascara == 1) {
-		//Máscara de Sobel
-		//Gradiente X
-		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
-		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
-		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
-		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
-		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
-
-		mascara_filtro_x = gradiente_sobel_Jx;
-		mascara_filtro_y = gradiente_sobel_Jy;
-		mascara_filtro_x.DivideEscalar(1 / 4);
-		mascara_filtro_y.DivideEscalar(1 / 4);
-
-	}
-	else if (mascara == 2) {
-		//Máscara de Prewitt
-		//Gradiente X
-		gradiente_prewitt_Jx(0, 0) = -1;		gradiente_prewitt_Jx(0, 1) = 0;		gradiente_prewitt_Jx(0, 2) = 1;
-		gradiente_prewitt_Jx(1, 0) = -1;		gradiente_prewitt_Jx(1, 1) = 0;		gradiente_prewitt_Jx(1, 2) = 1;
-		gradiente_prewitt_Jx(2, 0) = -1;		gradiente_prewitt_Jx(2, 1) = 0;		gradiente_prewitt_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_prewitt_Jy(0, 0) = 1;			gradiente_prewitt_Jy(0, 1) = 1;		gradiente_prewitt_Jy(0, 2) = 1;
-		gradiente_prewitt_Jy(1, 0) = 0;			gradiente_prewitt_Jy(1, 1) = 0;		gradiente_prewitt_Jy(1, 2) = 0;
-		gradiente_prewitt_Jy(2, 0) = -1;		gradiente_prewitt_Jy(2, 1) = -1;	gradiente_prewitt_Jy(2, 2) = -1;
-
-		mascara_filtro_x = gradiente_prewitt_Jx;
-		mascara_filtro_y = gradiente_prewitt_Jy;
-	}
-	else if (mascara == 3) {
-		//Máscara de Roberts
-		//Gradiente X
-		gradiente_roberts_Jx(0, 0) = -1;	gradiente_roberts_Jx(0, 1) = 0;		gradiente_roberts_Jx(0, 2) = 0;
-		gradiente_roberts_Jx(1, 0) = 0;		gradiente_roberts_Jx(1, 1) = 1;		gradiente_roberts_Jx(1, 2) = 0;
-		gradiente_roberts_Jx(2, 0) = 0;		gradiente_roberts_Jx(2, 1) = 0;		gradiente_roberts_Jx(2, 2) = 0;
-
-
-		//Gradiente Y
-		gradiente_roberts_Jy(0, 0) = 0;		gradiente_roberts_Jy(0, 1) = 0;		gradiente_roberts_Jy(0, 2) = -1;
-		gradiente_roberts_Jy(1, 0) = 0;		gradiente_roberts_Jy(1, 1) = 1;		gradiente_roberts_Jy(1, 2) = 0;
-		gradiente_roberts_Jy(2, 0) = 0;		gradiente_roberts_Jy(2, 1) = 0;		gradiente_roberts_Jy(2, 2) = 0;
-
-		mascara_filtro_x = gradiente_roberts_Jx;
-		mascara_filtro_y = gradiente_roberts_Jy;
-	}
-	else {
-		//No debería entrar aquí
-		//Se aplica Sobel por defecto
-		//Máscara de Sobel
-		//Gradiente X
-		gradiente_sobel_Jx(0, 0) = -1;		gradiente_sobel_Jx(0, 1) = 0;		gradiente_sobel_Jx(0, 2) = 1;
-		gradiente_sobel_Jx(1, 0) = -2;		gradiente_sobel_Jx(1, 1) = 0;		gradiente_sobel_Jx(1, 2) = 2;
-		gradiente_sobel_Jx(2, 0) = -1;		gradiente_sobel_Jx(2, 1) = 0;		gradiente_sobel_Jx(2, 2) = 1;
-
-
-		//Gradiente Y
-		gradiente_sobel_Jy(0, 0) = -1;		gradiente_sobel_Jy(0, 1) = -2;		gradiente_sobel_Jy(0, 2) = -1;
-		gradiente_sobel_Jy(1, 0) = 0;		gradiente_sobel_Jy(1, 1) = 0;		gradiente_sobel_Jy(1, 2) = 0;
-		gradiente_sobel_Jy(2, 0) = 1;		gradiente_sobel_Jy(2, 1) = 2;		gradiente_sobel_Jy(2, 2) = 1;
-
-		mascara_filtro_x = gradiente_sobel_Jx;
-		mascara_filtro_y = gradiente_sobel_Jy;
-
+	for (int i = resultado_prueba.FirstRow(); i <= resultado_prueba.LastRow(); i++) {
+		for (int j = resultado_prueba.FirstCol(); j <= resultado_prueba.LastCol(); j++) {
+			printf("%lf, ",resultado_prueba(i,j));
+		}
+		printf("\n");
 	}
 
-
+	printf("\nFin resultado prueba\n");
 	*/
 
 	//Convolución Jx
 	//Hacer convolución de J usando la máscara según el filtro elegido y guardarlo en matriz_Jx
 
-	printf("Convolución con el gradiente X\n");
+	printf("Convoluci\242n con el gradiente X\n");
 	matriz_Jx = convolucion(matriz_J, mascara_filtro_x);
+
+
+	/*printf("matriz_Jx\n");
+
+	for (int i = matriz_Jx.FirstRow(); i <= matriz_Jx.LastRow(); i++) {
+		for (int j = matriz_Jx.FirstCol(); j <= matriz_Jx.LastCol(); j++) {
+			printf("%lf, ", matriz_Jx(i, j));
+		}
+		printf("\n");
+	}
+
+	printf("\nFin matriz_Jx\n");*/
+
+
+
 
 	//Convolución Jy
 	//Hacer convolución de J usando la máscara según el filtro elegido y guardarlo en matriz_Jy
-	printf("Convolución con el gradiente Y\n");
+	printf("Convoluci\242n con el gradiente Y\n");
 	matriz_Jy = convolucion(matriz_J, mascara_filtro_y);
 
 	printf("Calculando magnitud de los bordes\n");
@@ -359,8 +249,7 @@ void programa(char entrada[], char salida[], int tipo) {
 	///Método1
 	if (metodo == 1) {
 
-		printf("Método 1\n");
-		printf("Estimando orientación de los bordes\n");
+		printf("Estimando orientaci\242n de los bordes\n");
 		//Estimar la orientación de la normal de los bordes
 		for (int i = matriz_eo.FirstRow(); i <= matriz_eo.LastRow(); i++) {
 			for (int j = matriz_eo.FirstCol(); j <= matriz_eo.LastCol(); j++) {
@@ -370,7 +259,7 @@ void programa(char entrada[], char salida[], int tipo) {
 
 		//Matriz de dirección
 		//Estimar dirección posible entre 0 - 45 - 90 - 135
-		printf("Estimando ángulo de los bordes\n");
+		printf("Estimando \240ngulo de los bordes\n");
 		for (int i = matriz_eo.FirstRow(); i <= matriz_eo.LastRow(); i++) {
 			for (int j = matriz_eo.FirstCol(); j <= matriz_eo.LastCol(); j++) {
 				matriz_direccion(i, j) = direccion_cercana(matriz_eo(i, j));
@@ -378,7 +267,7 @@ void programa(char entrada[], char salida[], int tipo) {
 		}
 
 		//Matriz no_max vecino más cercano
-		printf("Calculando matriz de no máximos\n");
+		printf("Calculando matriz de no m\240ximos\n");
 		matriz_nomax.SetValue(0);
 
 		for (int i = matriz_es.FirstRow(); i <= matriz_es.LastRow(); i++) {
@@ -388,7 +277,7 @@ void programa(char entrada[], char salida[], int tipo) {
 		}
 
 		//Histéresis según el umbral
-		printf("Recorrer imagen según añadiendo valores según el umbral");
+		printf("Recorrer imagen a\244adiendo valores seg\243n el umbral\n");
 		matriz_visitados.SetValue(0);
 		matriz_umbral.SetValue(0);
 		for (int i = imagen.FirstRow(); i <= imagen.LastRow(); i++) {
@@ -406,7 +295,7 @@ void programa(char entrada[], char salida[], int tipo) {
 	else if (metodo == 2) {
 
 		//Comprobar el peso con los vecino en la dirección correcta
-		printf("Calculando matriz de no máximos\n");
+		printf("Calculando matriz de no m\240ximos\n");
 		matriz_nomax.SetValue(0);
 
 		for (int i = matriz_es.FirstRow(); i <= matriz_es.LastRow(); i++) {
@@ -416,9 +305,8 @@ void programa(char entrada[], char salida[], int tipo) {
 		}
 
 		//Umbral histéresis
-
 		//Histéresis
-		printf("Histéresis una vez definidos el umbral\n");
+		printf("Hist\202resis una vez definido el umbral\n");
 		matriz_visitados.SetValue(0);
 		matriz_umbral.SetValue(0);
 		for (int i = imagen.FirstRow(); i <= imagen.LastRow(); i++) {
@@ -454,9 +342,33 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 
 	int center = m2.RowN() / 2;
 	C_Matrix aux(m1.FirstRow(), m1.LastRow(), m1.FirstCol(), m1.LastCol(), 255);
-
+	//int contador = 0;
 	C_Matrix::ElementT sumatoria_convolucion;
-	for (int i = m1.FirstRow() + center; i < m1.LastRow() - center; i++) {
+
+	for (int i = m1.FirstRow(); i <= m1.LastRow(); i++) {
+		for (int j = m1.FirstCol(); j <= m1.LastCol(); j++) {
+			sumatoria_convolucion = 0;
+			if (i <= center || i > (m1.LastRow() - center) || j <= center || j > (m1.LastCol() - center)) {
+				sumatoria_convolucion = m1(i, j);
+			}
+			else {
+				for (int k = m2.FirstRow(); k <= m2.LastRow(); k++) {
+					for (int l = m2.FirstCol(); l <= m2.LastCol(); l++) {
+						//Se resta center por el tamaño del kernel
+						sumatoria_convolucion += m1(i + k - center - m2.FirstRow(), j + l - center - m2.FirstCol())*m2(k, l);
+					}
+				}
+			}
+			
+			aux(i, j) = sumatoria_convolucion;
+		}
+	}
+	
+	
+	
+	
+	
+	/*for (int i = m1.FirstRow() + center; i < m1.LastRow() - center; i++) {
 		for (int j = m1.FirstCol() + center; j < m1.LastCol() - center; j++) {
 			sumatoria_convolucion = 0;
 			for (int k = m2.FirstRow(); k <= m2.LastRow(); k++) {
@@ -468,11 +380,12 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 			aux(i, j) = sumatoria_convolucion;
 		}
 	}
+	*/
 
 	return aux;
 }
 
-/*	Método para comprobar a qué ángulo se acerca más de 0º, 42º, 90º o 135º
+/*	Método para comprobar a qué ángulo se acerca más de 0º, 45º, 90º o 135º
 	f : valor a estudiar
 	return : Ángulo al que más se aproxima la entrada
 */
