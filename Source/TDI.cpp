@@ -19,55 +19,42 @@ void crear_matriz_nomax(int i, int j);
 void seguir_cadena_m2(int i, int j);
 void seguir_cadena_orientacion(int i, int j);
 
-int tam, metodo, mascara, k;
-double sigma;
-int u_max, u_min;
-int total_bien = 0;
-int total_mal = 0;
-C_Image imagen;
-C_Matrix kernel_gauss;
-C_Matrix matriz_J;
-C_Matrix matriz_es;
-C_Matrix matriz_eo;
-C_Matrix gradiente_sobel_Jx;
-C_Matrix gradiente_sobel_Jy;
-C_Matrix gradiente_prewitt_Jx;
-C_Matrix gradiente_prewitt_Jy;
-C_Matrix gradiente_roberts_Jx;
-C_Matrix gradiente_roberts_Jy;
-C_Matrix mascara_filtro_x;
-C_Matrix mascara_filtro_y;
-C_Matrix matriz_Jx;
-C_Matrix matriz_Jy;
-C_Matrix matriz_direccion;
-C_Matrix matriz_nomax;
-C_Matrix matriz_visitados;
-C_Matrix matriz_umbral;
-unsigned t0, t1;
-C_Image imagen_final;
+int tam, metodo, mascara, k;	//Tamaño, método a utilizar, máscara a utilizar, valor auxiliar para rellenar la máscara 
+double sigma;	//Valor de sigma (desviación estándar)
+int u_max, u_min;	//Umbrales máximos y mínimos
+C_Image imagen;	//Imagen original
+C_Matrix kernel_gauss;	//Kernel de Gauss
+C_Matrix matriz_J;	//Matriz convolucionada
+C_Matrix matriz_es;	//Matriz de magnitud de los bordes
+C_Matrix matriz_eo;	//Matriz de orientación de los bordes
+C_Matrix mascara_filtro_x;	//Máscara genérica X
+C_Matrix mascara_filtro_y;	//Máscara genérica Y
+C_Matrix matriz_Jx;	//Matriz convolucionada con máscara X
+C_Matrix matriz_Jy;	//Mátriz convolucionada con máscara Y
+C_Matrix matriz_direccion;	//Matriz de dirección de los bordes
+C_Matrix matriz_nomax;	//Matriz de no máximos
+C_Matrix matriz_visitados;	//Matriz de píxeles visitados
+C_Matrix matriz_umbral;	//Matriz binaria resultante de la umbralización
+unsigned t0, t1;	//Variables medida de tiempo
+C_Image imagen_final;	//Imagen final
 
 int main(int argc, char **argv)
 {
 	printf("Inicio del programa\n");
 	char txt_entrada[100];
 	char txt_salida[100];
-	//cout << "Enter image input name:\n";
 	cout << "Nombre de la imagen de entrada:\n";
 	cin.getline(txt_entrada, 100);
-	//cout << "Enter image output name:\n";
 	cout << "Nombre de la imagen de salida:\n";
 	cin.getline(txt_salida, 100);
 	if (strcmp(txt_entrada, txt_salida) == 0)printf("La imagen ser\240 sobrescrita\n");
-	//printf("Convolution kernel size (odd value and smaller than image): ");
 	printf("Valor de sigma: ");
 	scanf_s("%lf", &sigma);
 	printf("Tama\244o kernel convoluci\242n (valor impar menor que la imagen): ");
 	scanf_s("%d", &tam);
 	while (true) {
-		//printf("Threshold max value: ");
 		printf("Valor de umbral m\240ximo: ");
 		scanf_s("%d", &u_max);
-		//printf("Threshold min value: ");
 		printf("Valor de umbral m\241nimo: ");
 		scanf_s("%d", &u_min);
 		if (u_max > u_min) break;
@@ -75,11 +62,8 @@ int main(int argc, char **argv)
 	}
 
 	while (true) {
-		//cout << "Seleccionar máscara: 1 = Sobel ; 2 = Prewitt ; 3 = Roberts \n";
 		cout << "Seleccionar m\240scara: 1 = Prewitt ; 2 = Sobel \n";
 		scanf_s("%d", &mascara);
-		//if (mascara == 1 || mascara == 2 || mascara == 3) break;
-		//else printf("Number 1, 2 or 3\n");
 		if (mascara == 1 || mascara == 2) break;
 		else printf("N\243mero 1 or 2\n");
 	}
@@ -92,6 +76,7 @@ int main(int argc, char **argv)
 
 	//Medir el tiempo
 	t0 = clock();
+
 	//Inicialización del programa
 	programa(txt_entrada, txt_salida);
 
@@ -142,7 +127,7 @@ void programa(char entrada[], char salida[]) {
 
 	for (int i = kernel_gauss.FirstRow(); i <= kernel_gauss.LastRow(); i++) {
 		for (int j = kernel_gauss.FirstCol(); j <= kernel_gauss.LastCol(); j++) {
-			kernel_gauss(i, j) = (1 / (2 * M_PI)) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
+			kernel_gauss(i, j) = (1 / ((2 * M_PI)*pow(sigma,2))) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
 		}
 	}
 
@@ -288,16 +273,19 @@ void programa(char entrada[], char salida[]) {
 */
 C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 
-	int center = m2.RowN() / 2;
+	int center = m2.RowN() / 2;	//Número de píxeles de margen
 	C_Matrix aux(m1.FirstRow(), m1.LastRow(), m1.FirstCol(), m1.LastCol(), 255);
 	C_Matrix::ElementT sumatoria_convolucion;
 
+	//Recorrer matriz imagen original
 	for (int i = m1.FirstRow(); i <= m1.LastRow(); i++) {
 		for (int j = m1.FirstCol(); j <= m1.LastCol(); j++) {
 			sumatoria_convolucion = 0;
+			//Si el punto se encuentra dentro del margen se deja el píxel con el valor actual y se continua la ejecución
 			if (i <= center || i > (m1.LastRow() - center) || j <= center || j > (m1.LastCol() - center)) {
 				sumatoria_convolucion = m1(i, j);
 			}
+			//En caso contrario se realiza la convolución
 			else {
 				for (int k = m2.FirstRow(); k <= m2.LastRow(); k++) {
 					for (int l = m2.FirstCol(); l <= m2.LastCol(); l++) {
@@ -306,7 +294,7 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 					}
 				}
 			}
-
+			//Se añade el valor calculado al punto correspondiente
 			aux(i, j) = sumatoria_convolucion;
 		}
 	}
@@ -320,7 +308,9 @@ C_Matrix convolucion(C_Matrix m1, C_Matrix m2) {
 */
 int direccion_cercana(C_Matrix::ElementT f) {
 
+	//Convertir valor en ángulo
 	C_Matrix::ElementT angulo = (f / M_PI) * 180.0;
+	//Comprobar cercanía
 	if ((angulo < 22.5 && angulo > -22.5) || (angulo > 157.5 || angulo < -157.5)) return 0;
 	if ((angulo > 22.5 && angulo < 67.5) || (angulo < -112.5 && angulo > -157.5)) return 45;
 	if ((angulo > 67.5 && angulo < 112.5) || (angulo < -67.5 && angulo > -112.5)) return 90;
@@ -387,12 +377,11 @@ void crear_matriz_nomax(int i, int j) {
 				v3 = matriz_es(i + 1, j - 1);
 			}
 		}
-		//Calculamos la interpolacion de los gradientes
+		//COmparación de píxeles
 		aux1 = peso*v1 + (1 - peso)*v2;
 		aux2 = peso*v3 + (1 - peso)*v4;
 
-		//Suponemos el pixel actual temp como el maximo local
-		//y comprobamos si puede pertenecer al borde
+		//Comparación del máximo con el local
 		if (aux >= aux1 && aux >= aux2) {
 			matriz_nomax(i, j) = aux;
 		}
@@ -402,7 +391,7 @@ void crear_matriz_nomax(int i, int j) {
 	}
 }
 
-/*	Método para crear la imágen según el umbral de mínimos de forma recursiva siguiendo los 8 vecinos
+/*	Método para crear la imagen según el umbral de mínimos de forma recursiva siguiendo los 8 vecinos
 	i : posición fila de la matriz
 	j : posición columna de la matriz
 */
@@ -481,7 +470,7 @@ void crear_matriz_nomax_orientacion(int i, int j) {
 	}
 }
 
-/*	Método para crear la imágen según el umbral de mínimos de forma recursiva según la orientación
+/*	Método para crear la imagen según el umbral de mínimos de forma recursiva según la orientación
 i : posición fila de la matriz
 j : posición columna de la matriz
 */
