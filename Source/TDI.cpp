@@ -18,6 +18,7 @@ void crear_matriz_nomax_orientacion(int i, int j);
 void crear_matriz_nomax(int i, int j);
 void seguir_cadena_m2(int i, int j);
 void seguir_cadena_orientacion(int i, int j);
+void juntar_contornos(int i, int j);
 
 int tam, metodo, mascara, k;	//Tamaño, método a utilizar, máscara a utilizar, valor auxiliar para rellenar la máscara 
 double sigma;	//Valor de sigma (desviación estándar)
@@ -35,7 +36,7 @@ C_Matrix matriz_direccion;	//Matriz de dirección de los bordes
 C_Matrix matriz_nomax;	//Matriz de no máximos
 C_Matrix matriz_visitados;	//Matriz de píxeles visitados
 C_Matrix matriz_umbral;	//Matriz binaria resultante de la umbralización
-unsigned t0, t1;	//Variables medida de tiempo
+//unsigned t0, t1;	//Variables medida de tiempo
 C_Image imagen_final;	//Imagen final
 
 int main(int argc, char **argv)
@@ -75,7 +76,7 @@ int main(int argc, char **argv)
 	}
 
 	//Medir el tiempo
-	t0 = clock();
+	//t0 = clock();
 
 	//Inicialización del programa
 	programa(txt_entrada, txt_salida);
@@ -83,10 +84,10 @@ int main(int argc, char **argv)
 	printf("Finalizado con \202xito\n");
 
 	//Finalización medición del tiempo
-	t1 = clock();
+	//t1 = clock();
 
-	double time = (double(t1 - t0) / CLOCKS_PER_SEC);
-	cout << "Tiempo de ejecuci\242n: " << time << endl;
+	//double time = (double(t1 - t0) / CLOCKS_PER_SEC);
+	//cout << "Tiempo de ejecuci\242n: " << time << endl;
 
 }
 
@@ -222,6 +223,13 @@ void programa(char entrada[], char salida[]) {
 				}
 			}
 		}
+		
+		//Unión de bordes
+		for (int i = matriz_nomax.FirstRow(); i <= matriz_nomax.LastRow(); i++) {
+			for (int j = matriz_nomax.FirstCol(); j <= matriz_nomax.LastCol(); j++) {
+				if(matriz_nomax(i,j)>=u_max)juntar_contornos(i, j);
+			}
+		}
 	}
 	///Método2
 	else if (metodo == 2) {
@@ -311,7 +319,7 @@ int direccion_cercana(C_Matrix::ElementT f) {
 	//Convertir valor en ángulo
 	C_Matrix::ElementT angulo = (f / M_PI) * 180.0;
 	//Comprobar cercanía
-	if ((angulo < 22.5 && angulo > -22.5) || (angulo > 157.5 || angulo < -157.5)) return 0;
+	if ((angulo < 22.5 && angulo > -22.5) || (angulo > 157.5 && angulo < -157.5)) return 0;
 	if ((angulo > 22.5 && angulo < 67.5) || (angulo < -112.5 && angulo > -157.5)) return 45;
 	if ((angulo > 67.5 && angulo < 112.5) || (angulo < -67.5 && angulo > -112.5)) return 90;
 	if ((angulo > 112.5 && angulo < 157.5) || (angulo < -22.5 && angulo > -67.5)) return 135;
@@ -348,13 +356,18 @@ void crear_matriz_nomax(int i, int j) {
 			//Variables de arriba y abajo
 			v2 = matriz_es(i - 1, j);
 			v4 = matriz_es(i + 1, j);
-
+			//Cuadrante 2 y 4
 			if (matriz_Jx(i, j)*matriz_Jy(i, j) > 0) {
+				//Izquierda arriba
 				v1 = matriz_es(i - 1, j - 1);
+				//Derecha abajo
 				v3 = matriz_es(i + 1, j + 1);
 			}
+			//Cuadrante 1 y 3
 			else {
+				//Derecha arriba
 				v1 = matriz_es(i - 1, j + 1);
+				//Izquierda abajo
 				v3 = matriz_es(i + 1, j - 1);
 			}
 		}
@@ -365,26 +378,34 @@ void crear_matriz_nomax(int i, int j) {
 			else {
 				peso = fabs(matriz_Jy(i, j)) / fabs(matriz_Jx(i, j));
 			}
+			//Izquierda y derecha
 			v2 = matriz_es(i, j + 1);
 			v4 = matriz_es(i, j - 1);
-
+			//Cuadrante 3 y 1
 			if (matriz_Jx(i, j)*matriz_Jy(i, j) > 0) {
+				//Derecha abajo
 				v1 = matriz_es(i + 1, j + 1);
+				//Izquierda arriba
 				v3 = matriz_es(i - 1, j - 1);
 			}
+			//Cuadrante 2 y 4
 			else {
+				//Derecha arriba
 				v1 = matriz_es(i - 1, j + 1);
+				//Izquierda abajo
 				v3 = matriz_es(i + 1, j - 1);
 			}
 		}
-		//COmparación de píxeles
+		//Comparación de píxeles
 		aux1 = peso*v1 + (1 - peso)*v2;
 		aux2 = peso*v3 + (1 - peso)*v4;
 
 		//Comparación del máximo con el local
+		//Igualar
 		if (aux >= aux1 && aux >= aux2) {
 			matriz_nomax(i, j) = aux;
 		}
+		//Suprimir
 		else if (aux < aux1 || aux < aux2) {
 			matriz_nomax(i, j) = 0;
 		}
@@ -402,6 +423,7 @@ void seguir_cadena_m2(int i, int j) {
 	if (matriz_visitados(i, j) == 0)matriz_visitados(i, j) = 1;
 	else return;
 
+	//Marcar como borde
 	matriz_umbral(i, j) = 255;
 
 	//Vecinos del punto X
@@ -412,7 +434,7 @@ void seguir_cadena_m2(int i, int j) {
 	for (int k = 0; k < 8; k++) {
 
 		valor = matriz_nomax(i + pos_x[k], j + pos_y[k]);
-
+		//Los que superen el umbral mínimo pertenecen al borde también
 		if (valor >= u_min) {
 			seguir_cadena_m2(i + pos_x[k], j + pos_y[k]);
 		}
@@ -425,6 +447,7 @@ void seguir_cadena_m2(int i, int j) {
 */
 void crear_matriz_nomax_orientacion(int i, int j) {
 
+	//Evitar píxeles cercanos al borde para no salirse del rango de la imagen al bucar sus vecinos
 	if (i == matriz_es.FirstRow() || i == matriz_es.LastRow() || j == matriz_es.FirstCol() || j == matriz_es.LastCol()) {
 		matriz_nomax(i, j) = 0;
 		return;
@@ -471,12 +494,12 @@ void crear_matriz_nomax_orientacion(int i, int j) {
 }
 
 /*	Método para crear la imagen según el umbral de mínimos de forma recursiva según la orientación
-i : posición fila de la matriz
-j : posición columna de la matriz
+	i : posición fila de la matriz
+	j : posición columna de la matriz
 */
 void seguir_cadena_orientacion(int i, int j) {
 
-	if (matriz_visitados(i, j) == 1)return;
+	if (matriz_visitados(i, j) == 1)return;	//Píxel ya estudiado
 	if (i == imagen.FirstRow() || i == imagen.LastRow() || j == imagen.FirstCol() || j == imagen.LastCol()) return;
 
 	matriz_visitados(i, j) == 1;	//Visitado
@@ -510,4 +533,22 @@ void seguir_cadena_orientacion(int i, int j) {
 	//Seguir cadena por los puntos donde el valor sea mayor al umbral mínimo
 	if (matriz_nomax(i + aux_x1, j + aux_y1) >= u_min) seguir_cadena_orientacion(i + aux_x1, j + aux_y1);
 	if (matriz_nomax(i + aux_x2, j + aux_y2) >= u_min) seguir_cadena_orientacion(i + aux_x2, j + aux_y2);
+}
+
+/*	Método para unir contornos débiles próximos a un contorno fuerte
+	i: posición fila de la matriz
+	j: posición columna de la matriz
+*/
+void juntar_contornos(int i, int j) {
+	
+	if (i == matriz_nomax.FirstRow() || i == matriz_nomax.LastRow() 
+		|| j == matriz_nomax.FirstCol() || j == matriz_nomax.LastCol()) return;
+
+	//Recorrer imagen original con una máscara 3x3 y comprobar si hay algún borde fuerte
+	for (int k = -1; k <= 1; k++) {
+		for (int l = -1; l <= 1; l++) {
+			if (k == 0 && l == 0) continue;
+			if (matriz_nomax(i + k, j + l) >= u_min) matriz_umbral(i, j) = 255;
+		}
+	}
 }
