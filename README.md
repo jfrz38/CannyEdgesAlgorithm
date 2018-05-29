@@ -1,5 +1,5 @@
 ﻿# CannyEdgesAlgorithm
-Canny edges algorithm
+Canny Edges Algorithm
 
 Programa en C++ para encontrar los bordes de una imagen mediante el algoritmo de Canny
 
