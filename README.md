@@ -9,7 +9,7 @@ José Francisco Ruiz Zamora
 
 >>Introducir imagen a estudiar en escala de grises en la carpeta Run y compilar solución.
 
->>Parámetros de entrada:<br />
+Parámetros obligatorios de entrada:<br />
 * Nombre imagen entrada<br />
 * Nombre imagen salida<br />
 * Desviación estándar<br />
