@@ -5,8 +5,6 @@ Programa en C++ para encontrar los bordes de una imagen mediante el algoritmo de
 
 Programa elaborado para la asignatura Tratamiendo Digital de Imágenes de la Universidad de Almería curso 2017/2018
 
-José Francisco Ruiz Zamora
-
 >>Introducir imagen a estudiar en escala de grises en la carpeta Run y compilar solución.
 
 Parámetros obligatorios de entrada:<br />
@@ -26,3 +24,5 @@ Parámetros para esta imagen:
 * Tamaño kernel gaussiano = 5<br />
 * Filtro de gradiente = Sobel<br />
 * Método de ejecución = 8 vecinos<br />
+
+JFRZ
