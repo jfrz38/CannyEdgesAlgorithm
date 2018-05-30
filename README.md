@@ -7,4 +7,22 @@ Programa elaborado para la asignatura Tratamiendo Digital de Imágenes de la Uni
 
 José Francisco Ruiz Zamora
 
->>Introducir imagen a estudiar en la carpeta Run y ejecutar solución.
+>>Introducir imagen a estudiar en escala de grises en la carpeta Run y compilar solución.
+
+>>Parámetros de entrada:<br />
+* Nombre imagen entrada<br />
+* Nombre imagen salida<br />
+* Desviación estándar<br />
+* Tamaño kernel gaussiano<br />
+* Filtro de gradiente<br />
+* Método de ejecución<br />
+
+Resultados:<br />
+
+![img_original](https://i.imgur.com/ZKPICI2.png)<br />
+![resultado1](https://i.imgur.com/RHo0cC4.png)<br />
+Parámetros para esta imagen:
+* Desviación estándar = 1.5<br />
+* Tamaño kernel gaussiano = 5<br />
+* Filtro de gradiente = Sobel<br />
+* Método de ejecución = 8 vecinos<br />
