@@ -25,4 +25,4 @@ Parámetros para esta imagen:
 * Filtro de gradiente = Sobel<br />
 * Método de ejecución = 8 vecinos<br />
 
-JFRZ
+José Francisco Ruiz Zamora
