@@ -128,7 +128,7 @@ void programa(char entrada[], char salida[]) {
 
 	for (int i = kernel_gauss.FirstRow(); i <= kernel_gauss.LastRow(); i++) {
 		for (int j = kernel_gauss.FirstCol(); j <= kernel_gauss.LastCol(); j++) {
-			kernel_gauss(i, j) = (1 / ((2 * M_PI)*pow(sigma,2))) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
+			kernel_gauss(i, j) = (1 / ((2 * M_PI)*pow(sigma, 2))) * exp(-((pow(i, 2) + pow(j, 2)) / (2 * pow(sigma, 2))));
 		}
 	}
 
@@ -223,11 +223,11 @@ void programa(char entrada[], char salida[]) {
 				}
 			}
 		}
-		
+
 		//Unión de bordes
 		for (int i = matriz_nomax.FirstRow(); i <= matriz_nomax.LastRow(); i++) {
 			for (int j = matriz_nomax.FirstCol(); j <= matriz_nomax.LastCol(); j++) {
-				if(matriz_nomax(i,j)>=u_max)juntar_contornos(i, j);
+				if (matriz_nomax(i, j) >= u_max)juntar_contornos(i, j);
 			}
 		}
 	}
@@ -327,7 +327,7 @@ int direccion_cercana(C_Matrix::ElementT f) {
 	return -1;	//No llega aquí
 }
 
-/*	Método para suprimir máximos sin necesidad de mirar el vecino cercano.
+/*	Método para suprimir máximos por interpolación de pesos según cuadrante.
 	i : posición i (filas) de la matriz
 	j : posición j (columnas) de la matriz
 */
@@ -540,8 +540,8 @@ void seguir_cadena_orientacion(int i, int j) {
 	j: posición columna de la matriz
 */
 void juntar_contornos(int i, int j) {
-	
-	if (i == matriz_nomax.FirstRow() || i == matriz_nomax.LastRow() 
+
+	if (i == matriz_nomax.FirstRow() || i == matriz_nomax.LastRow()
 		|| j == matriz_nomax.FirstCol() || j == matriz_nomax.LastCol()) return;
 
 	//Recorrer imagen original con una máscara 3x3 y comprobar si hay algún borde fuerte
